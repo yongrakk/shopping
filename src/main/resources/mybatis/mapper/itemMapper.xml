@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.shopping.mapper.ProductMapper">
+
+    <select id="selectItemListCount" resultType="java.lang.Integer">
+        SELECT count(*) FROM SHOPPINGITEM;
+    </select>
+
+    <select id="selectItemList" resultType="com.example.shopping.dto.ItemDto" parameterType="java.util.Map">
+        SELECT
+            itemid,
+            itemCateId,
+            sc.cateName AS cateName,
+            itemName,
+            itemThumbnail1,
+            itemOriPrice,
+            itemSalePrice,
+            ROUND( ((case when (itemOriPrice-itemSalePrice) <![CDATA[<]]> 0 then 0 else (itemOriPrice-itemSalePrice) end)/itemOriPrice)*100 ) AS itemSaleRate,
+            itemCompany,
+            itemDistributor
+        FROM SHOPPINGITEM si
+        INNER JOIN SHOPPINGCATEGORY sc ON si.itemCateId = sc.cateid
+        ORDER BY itemId
+        LIMIT #{startIndex},#{pageSize} ;
+    </select>
+
+    <select id="selectItemById" resultType="com.example.shopping.dto.ItemDto">
+        SELECT
+            itemid,
+            itemCateId,
+            sc.cateName AS itemCateName,
+            itemName,
+            itemThumbnail1,
+            itemThumbnail2,
+            itemThumbnail3,
+            itemThumbnail4,
+            itemThumbnail5,
+            itemDetail,
+            itemOriPrice,
+            itemSalePrice,
+            ROUND( ((case when (itemOriPrice-itemSalePrice) <![CDATA[<]]> 0 then 0 else (itemOriPrice-itemSalePrice) end)/itemOriPrice)*100 ) AS itemSaleRate,
+            itemCompany,
+            itemDistributor
+        FROM SHOPPINGITEM si
+        INNER JOIN SHOPPINGCATEGORY sc ON si.itemCateId = sc.cateid
+        WHERE itemid= #{itemId};
+    </select>
+
+</mapper>

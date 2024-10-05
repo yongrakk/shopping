@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.shopping.mapper.UserMapper">
+
+    <select id="findByName" resultType="com.example.shopping.dto.UserDto">
+        SELECT * FROM SHOPPINGUSER WHERE username = #{username} ;
+    </select>
+
+    <insert id="saveUser" parameterType="com.example.shopping.dto.UserDto">
+        INSERT INTO SHOPPINGUSER(username,useremail,password) VALUES(#{userName},#{userEmail},#{password});
+    </insert>
+
+    <insert id="saveLikeItem" parameterType="java.util.Map">
+        INSERT INTO SHOPPINGLIKEITEM (userId, itemId) VALUES ( (select userId from SHOPPINGSER where userName =#{userName}) ,#{itemId});
+    </insert>
+
+    <delete id="removeLikeItem" parameterType="java.util.Map">
+        DELETE FROM SHOPPINGLIKEITEM WHERE userId = (select userId from SHOPPINGUSER where username = #{userName}) and itemId =#{itemId};
+    </delete>
+
+    <select id="selectLikeListCount" resultType="java.lang.Integer">
+        SELECT
+            count(*)
+        FROM SHOPPINGLIKEITEM sl
+        INNER JOIN SHOPPINGUSER su ON sl.userId = su.userId
+        WHERE su.userName = #{userName};
+    </select>
+
+    <select id="selectMainLikeList" resultType="com.example.shopping.dto.LikeItem">
+        SELECT
+            sl.itemId AS itemId,
+            si.itemName AS itemName,
+            si.itemOriPrice AS itemOriPrice,
+            si.itemSalePrice AS itemSalePrice,
+            si.itemDistributor AS itemDistributor,
+            si.itemThumbnail1 AS itemThumbnail1,
+            ROUND( ((case when (itemOriPrice-itemSalePrice) <![CDATA[<]]> 0 then 0 else (itemOriPrice-itemSalePrice) end)/itemOriPrice)*100 ) AS itemSaleRate
+        FROM SHOPPINGLIKEITEM sl
+        INNER JOIN SHOPPINGUSER su ON si.userId = su.userId
+        INNER JOIN SHOPPINGITEM si ON si.itemId = si.itemId
+        WHERE su.userName = #{userName}
+        ORDER BY si.likeId;
+    </select>
+
+    <select id="selectLikeList" resultType="com.example.shopping.dto.LikeItem">
+        SELECT
+            sl.itemId AS itemId,
+            si.itemName AS itemName,
+            si.itemOriPrice AS itemOriPrice,
+            si.itemSalePrice AS itemSalePrice,
+            si.itemDistributor AS itemDistributor,
+            si.itemThumbnail1 AS itemThumbnail1,
+            ROUND( ((case when (itemOriPrice-itemSalePrice) <![CDATA[<]]> 0 then 0 else (itemOriPrice-itemSalePrice) end)/itemOriPrice)*100 ) AS itemSaleRate
+        FROM SHOPPINGLIKEITEM SL
+        INNER JOIN SHOPPINGUSER su ON si.userId = su.userId
+        INNER JOIN SHOPPINGITEM si ON si.itemId = si.itemId
+        WHERE su.userName = #{userName}
+        ORDER BY si.likeId DESC
+        LIMIT #{startIndex},#{pageSize};
+    </select>
+
+</mapper>

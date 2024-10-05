@@ -1,0 +1,24 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<div class="header">
+  <link th:href="@{/css/common.css}" rel="stylesheet" />
+
+  <div class="header_wrap">
+    <span class="header_item_main">
+      <a th:href="@{/main}" >상품리스트</a>
+    </span>
+    <span class="header_like_item_main">
+      <a th:href="@{/userLikeList}" sec:authorize="isAuthenticated()">찜 목록</a>
+    </span>
+    <span class="header_login">
+      <a th:href="@{/login}" sec:authorize="isAnonymous()">login</a>
+    </span>
+    <span class="header_logout">
+      <form class="header_logout_form" th:action="@{/logout}" method="post" sec:authorize="isAuthenticated()">
+        <span class="header_login_username" sec:authentication="name">사용자</span>
+        <button class="header_logout_btn" type="submit">logout</button>
+      </form>
+    </span>
+  </div>
+</div>
+</html>

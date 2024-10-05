@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
+
+<head>
+
+    <title>상품 리스트</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <script th:inline="javascript">
+        //로그인 되어있을때 찜한 상품 상품 리스트에 활성화
+        $(document).ready(function(){
+            var loginYn = [[${isLogin}]];
+            if(loginYn =='Y'){
+                var itemList = [[${ItemList}]];
+                for(var i = 0; i < itemList.length; i++){
+                    if(itemList[i].isLikeItem == 'Y'){
+                        $('#like_btn_'+itemList[i].itemId).addClass("is-active");
+                    }
+                }
+            }
+            var currentPage = [[${pagination.page}]];
+            $('#page_item_'+currentPage).addClass("on");
+        });
+    </script>
+
+<!--    <script th:inline="javascript">
+        //현재 페이지 활성화 처리
+        $(document).ready(function(){
+        });
+    </script>-->
+
+    <script th:inline="javascript">
+        //로그인 여부
+        var loginYn = [[${isLogin}]];
+        function likeClick(id){
+
+            if(loginYn == 'N'){
+                alert("로그인 이후 사용이 가능합니다");
+                location.href = "/login";
+            } else {
+
+                var isActive = $('#like_btn_'+id).hasClass('is-active');
+
+                if(isActive){
+                    //활성화 상태 -> 찜해제 처리
+                    $.ajax({
+                        url:"/likeRemove"
+                        ,data:{"itemId":id}
+                        ,type:'GET'
+                        ,success:function (t){
+                            $('#like_btn_'+id).removeClass('is-active');
+                        }
+                    });
+                } else {
+                    //비활성화 상태 -> 찜추가 처리
+                    $.ajax({
+                        url: "/likeAdd"
+                        , data: {"itemId": id}
+                        , type: 'GET'
+                        ,success:function (t){
+                            $('#like_btn_'+id).addClass('is-active');
+                        }
+                    });
+                }
+            }
+        }
+
+    </script>
+
+</head>
+<body>
+    <th:block layout:fragment="header" th:include="@{/fragment/header}"></th:block>
+
+    <div layout:fragment="content" class="content">
+        <div class="product_main_wrap">
+            <ul class="product_main_list_ul">
+                <li class="product_main_list_li" th:each="item : ${ItemList}">
+                    <div class="thumbnail">
+                        <a th:href="@{/productView(id=${item.itemId})}">
+                            <div class="product_image">
+                                <img th:src="@{'/images/'+${item.itemThumbnail1}}">
+                            </div>
+                        </a>
+                    </div>
+                    <div class="product_main_like">
+                        <button class="product_main_add_like_btn"  th:onclick="likeClick([[${item.itemId}]])" th:id="'like_btn_'+${item.itemId}">button
+                            <span class="product_main_add_like_btn_icon" aria-hidden="true">
+                            </span>
+                        </button>
+                    </div>
+                    <div class="title" th:text="${item.itemName}"></div>
+                    <div class="productPrice">
+                        <span class="product_original_price">
+                            <del th:if="${item.itemSaleRate > 0}" th:text="|${#numbers.formatInteger(item.itemOriPrice,3,'COMMA')}원|"></del>
+                        </span>
+                        <span class="product_discount_rate" th:if="${item.itemSaleRate > 0}" th:text="|${item.itemSaleRate}%|">할인율</span>
+                        <strong class="product_final_price" th:if="${item.itemSaleRate > 0}" th:text="|${#numbers.formatInteger(item.itemSalePrice,3,'COMMA')}원|"></strong>
+                        <strong class="product_final_price" th:unless="${item.itemSaleRate > 0}" th:text="|${#numbers.formatInteger(item.itemOriPrice,3,'COMMA')}원|"></strong>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="pagination_wrap">
+        <ul class="pagination_ul">
+            <li class="pagination_li" th:if="${pagination.totalPageCount > 1}">
+                <a class="page_link" th:href="@{/main?page=1}" aria-label="Previous">
+                    <span aria-hidden="true">처음</span>
+                </a>
+            </li>
+            <li class="pagination_li" th:if="${pagination.totalPageCount > pagination.blockSize}">
+                <a class="page-link" th:href="@{/main?page={page} (page = ${pagination.prevBlock})}" aria-label="Previous">
+                    <span aria-hidden="true">이전</span>
+                </a>
+            </li>
+            <th:block  th:with="start = ${pagination.startPage}, end = ${pagination.endPage}" th:if="${pagination.totalPageCount > 1}">
+                <li class="page_item"
+                    th:with="start = ${pagination.startPage}, end = ${pagination.endPage}"
+                    th:each="pageButton : ${#numbers.sequence(start, end)}" th:id="'page_item_'+${pageButton}">
+                    <a class="page_link" th:href="@{/main?page={page} (page = ${pageButton})}" th:text=${pageButton}></a>
+                </li>
+            </th:block>
+            <th:block th:unless="${pagination.totalPageCount > 1}">
+                <a class="page_link" th:href="@{/main?page=1}" th:text="1"></a>
+            </th:block>
+            <li class="pagination_li" th:if="${pagination.totalPageCount > pagination.blockSize}">
+                <a class="page_link" th:href="@{main?page={page} (page = ${pagination.nextBlock})}" aria-label="Next">
+                    <span aria-hidden="true">다음</span>
+                </a>
+            </li>
+            <li class="pagination_li" th:if="${pagination.totalPageCount > 1}">
+                <a class="page_link" th:href="@{main?page={page} (page = ${pagination.totalPageCount})}" aria-label="Previous">
+                    <span aria-hidden="true">끝</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</body>
+</html>

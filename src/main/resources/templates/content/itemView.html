@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
+<head>
+
+    <title>상품상세 페이지</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <script th:inline="javascript">
+        //로그인 여부
+        var loginYn = [[${isLogin}]];
+
+        function likeClick(id) {
+
+            if (loginYn == 'N') {
+                alert("로그인 이후 사용이 가능합니다");
+                location.href = "/login";
+            } else {
+
+                //클릭한 찜하기 버튼 활성화 되어있는지 확인
+                var isActive = $('#like_btn_' + id).hasClass('is-active');
+
+                if (isActive) {
+                    //활성화 상태 -> 찜해제 처리
+                    $.ajax({
+                        url: "/likeRemove"
+                        , data: {"itemId": id}
+                        , type: 'GET'
+                        , success: function (t) {
+                            $('#like_btn_' + id).removeClass('is-active');
+                        }
+                    });
+                } else {
+                    //비활성화 -> 찜추가 처리
+                    $.ajax({
+                        url: "/likeAdd"
+                        , data: {"itemId": id}
+                        , type: 'GET'
+                        , success: function (t) {
+                            $('#like_btn_' + id).addClass('is-active');
+                        }
+                    });
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <th:block layout:fragment="header" th:include="@{/fragment/header}"></th:block>
+
+    <div class="product_view_wrap">
+        <div class="product_view_top">
+            <div class="product_view_category">
+                <span>카테고리 > </span>
+                <span th:text="${itemInfo.itemCateName}">카테고리</span>
+            </div>
+            <div class="product_view_thumbnail">
+                <img th:src="@{'/images/'+${itemInfo.itemThumbnail1}}">
+            </div>
+            <div class="product_view_like">
+                <button class="product_view_add_like_btn is-active" th:if="${itemInfo.isLikeItem == 'Y'}"
+                        th:onclick="likeClick([[${itemInfo.itemId}]])" th:id="'like_btn_'+${itemInfo.itemId}">button
+                    <span class="product_view_add_like_btn_icon" aria-hidden="true"></span>
+                </button>
+
+                <button class="product_view_add_like_btn" th:if="${itemInfo.isLikeItem == 'N'}"
+                        th:onclick="likeClick([[${itemInfo.itemId}]])" th:id="'like_btn_'+${itemInfo.itemId}">button
+                    <span class="product_view_add_like_btn_icon" aria-hidden="true"></span>
+                </button>
+            </div>
+            <div class="product_view_info">
+                <div class="product_view_info_company">
+                    <span class="product_view_company">제조사 : </span>
+                    <span class="product_view_company_data" th:text="${itemInfo.itemCompany}">제조사</span>
+                </div>
+                <div class="product_view_info_distributor">
+                    <span class="product_view_distributor">유통사 : </span>
+                    <span class="product_view_distributor_data" th:text="${itemInfo.itemDistributor}">제조사</span>
+                </div>
+                <div class="product_view_info_itemName">
+                    <span class="product_view_itemName">상품명 : </span>
+                    <span class="product_view_itemName_data" th:text="${itemInfo.itemName}">상품명</span>
+                </div>
+                <div class="product_view_info_price">
+                    <strong th:if="${itemInfo.itemSaleRate >0 }">할인가 : </strong>
+                    <del class="product_view_original_price" th:if="${itemInfo.itemSaleRate >0 }"
+                         th:text="|${#numbers.formatInteger(itemInfo.itemOriPrice,3,'COMMA')}원|"></del>
+                    <span class="product_view_discount_rate" th:if="${itemInfo.itemSaleRate >0 }"
+                          th:text="|${itemInfo.itemSaleRate}%|">할인율</span>
+                    <strong class="product_view_discount_price" th:if="${itemInfo.itemSaleRate >0 }"
+                            th:text="|${#numbers.formatInteger(itemInfo.itemSalePrice,3,'COMMA')}원|">할인가</strong>
+                    <strong th:unless="${itemInfo.itemSaleRate >0 }">판매가 : </strong>
+                    <strong class="product_view_discount_price" th:unless="${itemInfo.itemSaleRate >0 }"
+                            th:text="|${#numbers.formatInteger(itemInfo.itemOriPrice,3,'COMMA')}원|">판매가</strong>
+                </div>
+            </div>
+        </div>
+        <div class="product_view_detail_wrap">
+            <div class="product_view_detail_info">
+                <img th:src="@{'/images/'+${itemInfo.itemDetail}}">
+            </div>
+        </div>
+    </div>
+</body>
+</html>

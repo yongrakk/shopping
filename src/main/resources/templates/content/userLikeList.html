@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
+
+<head>
+
+    <title>찜하기 리스트</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <script th:inline="javascript">
+        //현재 페이지 활성화 처리
+        $(document).ready(function(){
+            var currentPage = [[${pagination.page}]];
+            $('#page_item_'+currentPage).addClass("on");
+        });
+    </script>
+
+    <script th:inline="javascript">
+        var currentPage = [[${pagination.page}]];
+        function removeClick(id){
+            //찜하기 리스트에서 삭제 처리
+            if (confirm("정말 삭제하시겠습니까?")){
+                $.ajax({
+                    url:"/likeRemove"
+                    ,data:{"itemId":id}
+                    ,type:'GET'
+                    ,success:function (t){
+                        $('#itemId_'+id).remove();
+                        //현재 페이지에서 찜하기 상품이 없을경우 처리
+                        var emptyCheck = $('.user_like_list_li').length;
+                        if(emptyCheck < 1){
+                            if(currentPage > 1 ){
+                                location.href="/userLikeList?page=1";
+                            } else {
+                                location.reload();
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+</head>
+<body>
+<th:block layout:fragment="header" th:include="@{/fragment/header}"></th:block>
+
+    <div class="user_like_list_wrap">
+        <div class="user_like_list_area">
+            <h2>찜 목록</h2>
+            <div th:if="${userLikeItemList.isEmpty()}">찜한 상품이 없습니다.</div>
+            <ul class="user_like_list_ul">
+                <li class="user_like_list_li" th:id="'itemId_'+${userLikeItem.itemId}" th:each="userLikeItem : ${userLikeItemList}">
+                    <div class="user_like_item">
+                        <div class="user_like_item_thumbnail">
+                            <a th:href="@{/productView(id=${userLikeItem.itemId})}">
+                                <div class="like_item_image">
+                                    <img th:src="@{'/images/'+${userLikeItem.itemThumbnail1}}">
+                                </div>
+                            </a>
+                        </div>
+                        <div class="user_like_item_data">
+                            <a th:href="@{/productView(id=${userLikeItem.itemId})}">
+                                <p>
+                                    <strong th:text="${userLikeItem.itemDistributor}"></strong>
+                                    [[${userLikeItem.itemName}]]
+                                </p>
+                            </a>
+                            <p>
+                                <strong class="user_like_item_discount_rate" th:if="${userLikeItem.itemSaleRate > 0 }" th:text="|${userLikeItem.itemSaleRate}%|">할인율</strong>
+                                <strong th:if="${userLikeItem.itemSaleRate > 0 }" th:text="|${#numbers.formatInteger(userLikeItem.itemSalePrice,3,'COMMA')}원|">할인가</strong>
+                                <del th:if="${userLikeItem.itemSaleRate > 0}" th:text="|${#numbers.formatInteger(userLikeItem.itemOriPrice,3,'COMMA')}원|"></del>
+                                <strong class="product_final_price" th:unless="${userLikeItem.itemSaleRate > 0}" th:text="|${#numbers.formatInteger(userLikeItem.itemOriPrice,3,'COMMA')}원|"></strong>
+                            </p>
+                        </div>
+                        <button class="user_like_item_remove_btn"  th:onclick="removeClick([[${userLikeItem.itemId}]])" th:id="'remove_btn_'+${userLikeItem.itemId}">
+                            <span class="user_like_item_remove_icon" aria-hidden="true">
+                            </span>
+                        </button>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="pagination_wrap">
+            <ul class="pagination_ul">
+                <li class="pagination_li" th:if="${pagination.totalPageCount > 1}">
+                    <a class="page_link" th:href="@{/userLikeList?page=1}" aria-label="Previous">
+                        <span aria-hidden="true">처음</span>
+                    </a>
+                </li>
+                <li class="pagination_li" th:if="${pagination.totalPageCount > pagination.blockSize}">
+                    <a class="page-link" th:href="@{/userLikeList?page={page} (page = ${pagination.prevBlock})}" aria-label="Previous">
+                        <span aria-hidden="true">이전</span>
+                    </a>
+                </li>
+                <th:block  th:with="start = ${pagination.startPage}, end = ${pagination.endPage}" th:if="${pagination.totalPageCount > 1}">
+                    <li class="page_item"
+                        th:with="start = ${pagination.startPage}, end = ${pagination.endPage}"
+                        th:each="pageButton : ${#numbers.sequence(start, end)}" th:id="'page_item_'+${pageButton}">
+                        <a class="page_link" th:href="@{/userLikeList?page={page} (page = ${pageButton})}" th:text=${pageButton}></a>
+                    </li>
+                </th:block>
+                <th:block th:unless="${pagination.totalPageCount > 1}">
+                    <a class="page_link" th:href="@{/userLikeList?page=1}" th:text="1"></a>
+                </th:block>
+                <li class="pagination_li" th:if="${pagination.totalPageCount > pagination.blockSize}">
+                    <a class="page_link" th:href="@{userLikeList?page={page} (page = ${pagination.nextBlock})}" aria-label="Next">
+                        <span aria-hidden="true">다음</span>
+                    </a>
+                </li>
+                <li class="pagination_li" th:if="${pagination.totalPageCount > 1}">
+                    <a class="page_link" th:href="@{userLikeList?page={page} (page = ${pagination.totalPageCount})}" aria-label="Previous">
+                        <span aria-hidden="true">끝</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
