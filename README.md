@@ -60,8 +60,8 @@
 │├─java
 ││└─com
 ││  └─example
-││    └─lotteproduct
-││      │ LotteProductApplication.java     #실행 어플리케이션
+││    └─shopping
+││      │ ShoppingApplication.java     #실행 어플리케이션
 ││      │ 
 ││      ├─config
 ││      │     SecurityConfig.java          #Spring Security 관련 설정(페이지 권한, Formlogin)
